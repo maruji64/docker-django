@@ -1,0 +1,33 @@
+version: "3.9"
+
+services:
+  db:
+    container_name: mysql
+    build: ./mysql
+    volumes:
+      - ./db_data:/var/lib/mysql
+    env_file:
+      - .env.prod
+  app:
+    container_name: app
+    build: ./python
+    command: uwsgi --socket :8000 --module app.wsgi --py-autoreload 1 --logto /tmp/tmp.log
+    volumes:
+      - ./src:/workspace
+    expose:
+      - "8000"
+    env_file:
+      - .env.prod
+    depends_on:
+      - db
+  web:
+    container_name: web
+    build: ./nginx
+    ports:
+      - 80:80
+    volumes:
+      - ./src:/workspace
+    depends_on:
+      - app
+volumes:
+  db_data:
